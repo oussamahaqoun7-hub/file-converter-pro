@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحول الشامل - صور | فيديو | صوت | مستندات</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌟 المحول الشامل للملفات</h1>
+            <p>حول الصور والفيديو والصوت والمستندات بسهولة</p>
+        </header>
+
+        <div class="converter-card">
+            <!-- منطقة الرفع -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>اسحب الملف هنا أو انقر للاختيار</h3>
+                    <input type="file" id="fileInput" hidden>
+                    <div class="supported-types">
+                        <span class="type-badge">🖼️ صور</span>
+                        <span class="type-badge">🎬 فيديو</span>
+                        <span class="type-badge">🎵 صوت</span>
+                        <span class="type-badge">📄 مستندات</span>
+                    </div>
+                    <p class="hint">الحجم الأقصى: 500 ميجابايت</p>
+                </div>
+            </div>
+
+            <!-- معلومات الملف -->
+            <div class="file-info-section" id="fileInfoSection" style="display: none;">
+                <div class="file-preview" id="filePreview">
+                    <img id="imagePreview" style="display:none" src="" alt="معاينة">
+                    <video id="videoPreview" style="display:none" controls></video>
+                    <audio id="audioPreview" style="display:none" controls></audio>
+                    <div id="docPreview" style="display:none">
+                        <div class="doc-icon">📄</div>
+                    </div>
+                </div>
+                <div class="file-details">
+                    <h3 id="fileTypeIcon">📄</h3>
+                    <p id="fileName"></p>
+                    <p id="fileSize"></p>
+                    <p id="fileExtra"></p>
+                    <button class="btn-secondary" id="changeFileBtn">تغيير الملف</button>
+                </div>
+            </div>
+
+            <!-- خيارات التحويل -->
+            <div class="conversion-section" id="conversionSection" style="display: none;">
+                <h3>⚙️ خيارات التحويل</h3>
+
+                <!-- خيارات الصور -->
+                <div class="format-group" id="imageFormats" style="display: none;">
+                    <label>📸 صيغة الصورة:</label>
+                    <div class="format-buttons">
+                        <button class="format-btn" data-format="jpg">JPG</button>
+                        <button class="format-btn" data-format="png">PNG</button>
+                        <button class="format-btn" data-format="webp">WebP</button>
+                        <button class="format-btn" data-format="gif">GIF</button>
+                        <button class="format-btn" data-format="bmp">BMP</button>
+                        <button class="format-btn" data-format="tiff">TIFF</button>
+                        <button class="format-btn" data-format="avif">AVIF</button>
+                    </div>
+
+                    <div class="quality-control">
+                        <label>الجودة: <span id="imageQuality">90</span>%</label>
+                        <input type="range" id="imageQualitySlider" min="1" max="100" value="90">
+                    </div>
+
+                    <div class="resize-control">
+                        <label>
+                            <input type="checkbox" id="resizeCheck">
+                            تغيير الحجم
+                        </label>
+                        <div id="resizeInputs" style="display: none;">
+                            <input type="number" id="widthInput" placeholder="العرض">
+                            <span>×</span>
+                            <input type="number" id="heightInput" placeholder="الارتفاع">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- خيارات الفيديو -->
+                <div class="format-group" id="videoFormats" style="display: none;">
+                    <label>🎬 صيغة الفيديو:</label>
+                    <div class="format-buttons">
+                        <button class="format-btn" data-format="mp4">MP4</button>
+                        <button class="format-btn" data-format="avi">AVI</button>
+                        <button class="format-btn" data-format="mov">MOV</button>
+                        <button class="format-btn" data-format="webm">WebM</button>
+                        <button class="format-btn" data-format="mkv">MKV</button>
+                        <button class="format-btn" data-format="gif">GIF</button>
+                    </div>
+
+                    <div class="quality-control">
+                        <label>جودة الفيديو:</label>
+                        <select id="videoBitrate">
+                            <option value="500k">منخفضة (500k)</option>
+                            <option value="1000k" selected>متوسطة (1000k)</option>
+                            <option value="2000k">عالية (2000k)</option>
+                            <option value="4000k">عالية جداً (4000k)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- خيارات الصوت -->
+                <div class="format-group" id="audioFormats" style="display: none;">
+                    <label>🎵 صيغة الصوت:</label>
+                    <div class="format-buttons">
+                        <button class="format-btn" data-format="mp3">MP3</button>
+                        <button class="format-btn" data-format="wav">WAV</button>
+                        <button class="format-btn" data-format="ogg">OGG</button>
+                        <button class="format-btn" data-format="m4a">M4A</button>
+                        <button class="format-btn" data-format="flac">FLAC</button>
+                        <button class="format-btn" data-format="aac">AAC</button>
+                    </div>
+
+                    <div class="quality-control">
+                        <label>جودة الصوت:</label>
+                        <select id="audioBitrate">
+                            <option value="128k">عادية (128k)</option>
+                            <option value="192k" selected>جيدة (192k)</option>
+                            <option value="256k">ممتازة (256k)</option>
+                            <option value="320k">عالية جداً (320k)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- خيارات المستندات -->
+                <div class="format-group" id="documentFormats" style="display: none;">
+                    <label>📄 صيغة المستند:</label>
+                    <div class="format-buttons">
+                        <button class="format-btn" data-format="pdf">PDF</button>
+                        <button class="format-btn" data-format="txt">TXT</button>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="convertBtn">
+                    🚀 ابدأ التحويل
+                </button>
+            </div>
+
+            <!-- شريط التقدم -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="spinner"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">جاري التحويل...</p>
+                <p class="progress-hint">قد يستغرق الأمر بضع ثوانٍ حسب حجم الملف</p>
+            </div>
+
+            <!-- منطقة التحميل -->
+            <div class="download-section" id="downloadSection" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h3>تم التحويل بنجاح!</h3>
+                <p id="convertedInfo"></p>
+                <button class="btn-download" id="downloadBtn">
+                    ⬇️ تحميل الملف المحول
+                </button>
+                <button class="btn-secondary" id="convertAnotherBtn">
+                    🔄 تحويل ملف آخر
+                </button>
+            </div>
+        </div>
+
+        <!-- معلومات الأنواع المدعومة -->
+        <div class="info-section">
+            <h3>📋 الملفات المدعومة</h3>
+            <div class="types-grid">
+                <div class="type-card">
+                    <div class="type-icon">🖼️</div>
+                    <h4>الصور</h4>
+                    <p class="formats-list">JPG • PNG • WebP • GIF • BMP • TIFF • AVIF</p>
+                    <ul class="features-list">
+                        <li>تحويل بين جميع الصيغ</li>
+                        <li>تحكم في الجودة</li>
+                        <li>تغيير الحجم</li>
+                        <li>ضغط الصور</li>
+                    </ul>
+                </div>
+
+                <div class="type-card">
+                    <div class="type-icon">🎬</div>
+                    <h4>الفيديو</h4>
+                    <p class="formats-list">MP4 • AVI • MOV • WebM • MKV • GIF</p>
+                    <ul class="features-list">
+                        <li>تحويل بجودة عالية</li>
+                        <li>تحكم في البت ريت</li>
+                        <li>تحويل إلى GIF</li>
+                        <li>ضغط الفيديو</li>
+                    </ul>
+                </div>
+
+                <div class="type-card">
+                    <div class="type-icon">🎵</div>
+                    <h4>الصوت</h4>
+                    <p class="formats-list">MP3 • WAV • OGG • M4A • FLAC • AAC</p>
+                    <ul class="features-list">
+                        <li>تحويل سريع</li>
+                        <li>جودة صوت عالية</li>
+                        <li>صيغ متعددة</li>
+                        <li>استخراج من فيديو</li>
+                    </ul>
+                </div>
+
+                <div class="type-card">
+                    <div class="type-icon">📄</div>
+                    <h4>المستندات</h4>
+                    <p class="formats-list">PDF • TXT • DOCX</p>
+                    <ul class="features-list">
+                        <li>PDF إلى TXT</li>
+                        <li>TXT إلى PDF</li>
+                        <li>DOCX إلى TXT</li>
+                        <li>استخراج النصوص</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- مميزات إضافية -->
+        <div class="features-section">
+            <h3>✨ لماذا تختار محولنا؟</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <span class="feature-emoji">⚡</span>
+                    <h4>سريع جداً</h4>
+                    <p>تحويل فوري في ثوانٍ معدودة</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-emoji">🔒</span>
+                    <h4>آمن 100%</h4>
+                    <p>حذف تلقائي للملفات بعد التحويل</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-emoji">🎨</span>
+                    <h4>جودة عالية</h4>
+                    <p>تحكم كامل في جودة الإخراج</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-emoji">📱</span>
+                    <h4>يعمل على كل الأجهزة</h4>
+                    <p>متوافق مع الجوال والكمبيوتر</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-emoji">💯</span>
+                    <h4>مجاني تماماً</h4>
+                    <p>بدون حدود أو قيود</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-emoji">🌐</span>
+                    <h4>بدون تسجيل</h4>
+                    <p>استخدم مباشرة دون حساب</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>💙 تم التطوير بواسطة الذكاء الاصطناعي | جميع الحقوق محفوظة © 2025</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

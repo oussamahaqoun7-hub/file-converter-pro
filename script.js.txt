@@ -1,0 +1,396 @@
+// العناصر الرئيسية
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const uploadSection = document.getElementById('uploadSection');
+const fileInfoSection = document.getElementById('fileInfoSection');
+const conversionSection = document.getElementById('conversionSection');
+const progressSection = document.getElementById('progressSection');
+const downloadSection = document.getElementById('downloadSection');
+
+// عناصر المعاينة
+const imagePreview = document.getElementById('imagePreview');
+const videoPreview = document.getElementById('videoPreview');
+const audioPreview = document.getElementById('audioPreview');
+const docPreview = document.getElementById('docPreview');
+const fileTypeIcon = document.getElementById('fileTypeIcon');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+const fileExtra = document.getElementById('fileExtra');
+
+// عناصر الخيارات
+const imageFormats = document.getElementById('imageFormats');
+const videoFormats = document.getElementById('videoFormats');
+const audioFormats = document.getElementById('audioFormats');
+const documentFormats = document.getElementById('documentFormats');
+
+const imageQualitySlider = document.getElementById('imageQualitySlider');
+const imageQuality = document.getElementById('imageQuality');
+const resizeCheck = document.getElementById('resizeCheck');
+const resizeInputs = document.getElementById('resizeInputs');
+const widthInput = document.getElementById('widthInput');
+const heightInput = document.getElementById('heightInput');
+const videoBitrate = document.getElementById('videoBitrate');
+const audioBitrate = document.getElementById('audioBitrate');
+
+// الأزرار
+const convertBtn = document.getElementById('convertBtn');
+const changeFileBtn = document.getElementById('changeFileBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const convertAnotherBtn = document.getElementById('convertAnotherBtn');
+
+// عناصر التقدم
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const convertedInfo = document.getElementById('convertedInfo');
+
+// المتغيرات العامة
+let selectedFile = null;
+let selectedFormat = null;
+let uploadedFileId = null;
+let uploadedFileType = null;
+let downloadUrl = null;
+
+// مستمعي الأحداث
+uploadArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelect);
+changeFileBtn.addEventListener('click', resetUpload);
+convertBtn.addEventListener('click', startConversion);
+downloadBtn.addEventListener('click', downloadFile);
+convertAnotherBtn.addEventListener('click', resetUpload);
+
+// السحب والإفلات
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragging');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragging');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragging');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
+
+// اختيار الصيغة
+document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const parent = this.parentElement;
+        parent.querySelectorAll('.format-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedFormat = this.dataset.format;
+    });
+});
+
+// شريط الجودة
+imageQualitySlider.addEventListener('input', (e) => {
+    imageQuality.textContent = e.target.value;
+});
+
+// خيار تغيير الحجم
+resizeCheck.addEventListener('change', (e) => {
+    resizeInputs.style.display = e.target.checked ? 'flex' : 'none';
+});
+
+// معالجة اختيار الملف
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        handleFile(file);
+    }
+}
+
+// معالجة الملف
+function handleFile(file) {
+    // التحقق من الحجم
+    if (file.size > 500 * 1024 * 1024) {
+        alert('❌ حجم الملف كبير جداً! الحد الأقصى 500 ميجابايت');
+        return;
+    }
+
+    selectedFile = file;
+    displayFileInfo(file);
+    uploadFile(file);
+}
+
+// عرض معلومات الملف
+function displayFileInfo(file) {
+    // تحديد نوع الملف
+    const type = getFileCategory(file);
+
+    // إخفاء جميع المعاينات
+    imagePreview.style.display = 'none';
+    videoPreview.style.display = 'none';
+    audioPreview.style.display = 'none';
+    docPreview.style.display = 'none';
+
+    // عرض المعاينة المناسبة
+    const reader = new FileReader();
+
+    switch(type) {
+        case 'image':
+            fileTypeIcon.textContent = '🖼️';
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+
+                // الحصول على أبعاد الصورة
+                const img = new Image();
+                img.onload = () => {
+                    fileExtra.textContent = `الأبعاد: ${img.width} × ${img.height} بكسل`;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            break;
+
+        case 'video':
+            fileTypeIcon.textContent = '🎬';
+            reader.onload = (e) => {
+                videoPreview.src = e.target.result;
+                videoPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            fileExtra.textContent = 'ملف فيديو';
+            break;
+
+        case 'audio':
+            fileTypeIcon.textContent = '🎵';
+            reader.onload = (e) => {
+                audioPreview.src = e.target.result;
+                audioPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            fileExtra.textContent = 'ملف صوتي';
+            break;
+
+        case 'document':
+            fileTypeIcon.textContent = '📄';
+            docPreview.style.display = 'flex';
+            fileExtra.textContent = 'مستند';
+            break;
+    }
+
+    // عرض المعلومات
+    fileName.textContent = `الاسم: ${file.name}`;
+    fileSize.textContent = `الحجم: ${formatBytes(file.size)}`;
+
+    // إظهار خيارات التحويل المناسبة
+    showConversionOptions(type);
+
+    // إخفاء الرفع وإظهار المعلومات
+    uploadSection.style.display = 'none';
+    fileInfoSection.style.display = 'grid';
+    conversionSection.style.display = 'block';
+}
+
+// تحديد فئة الملف
+function getFileCategory(file) {
+    const type = file.type;
+    const name = file.name.toLowerCase();
+
+    if (type.startsWith('image/')) return 'image';
+    if (type.startsWith('video/')) return 'video';
+    if (type.startsWith('audio/')) return 'audio';
+
+    // حسب الامتداد
+    if (name.match(/\.(jpg|jpeg|png|gif|bmp|webp|tiff|avif)$/)) return 'image';
+    if (name.match(/\.(mp4|avi|mov|wmv|flv|mkv|webm)$/)) return 'video';
+    if (name.match(/\.(mp3|wav|ogg|m4a|flac|aac|wma)$/)) return 'audio';
+    if (name.match(/\.(pdf|doc|docx|txt|rtf)$/)) return 'document';
+
+    return 'unknown';
+}
+
+// إظهار خيارات التحويل
+function showConversionOptions(type) {
+    // إخفاء جميع الخيارات
+    imageFormats.style.display = 'none';
+    videoFormats.style.display = 'none';
+    audioFormats.style.display = 'none';
+    documentFormats.style.display = 'none';
+
+    // إظهار الخيارات المناسبة
+    switch(type) {
+        case 'image':
+            imageFormats.style.display = 'block';
+            break;
+        case 'video':
+            videoFormats.style.display = 'block';
+            break;
+        case 'audio':
+            audioFormats.style.display = 'block';
+            break;
+        case 'document':
+            documentFormats.style.display = 'block';
+            break;
+    }
+}
+
+// رفع الملف
+async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            uploadedFileId = result.fileId;
+            uploadedFileType = result.fileType;
+            console.log('✅ تم رفع الملف بنجاح');
+        } else {
+            throw new Error(result.error || 'فشل رفع الملف');
+        }
+    } catch (error) {
+        console.error('خطأ في الرفع:', error);
+        alert('❌ حدث خطأ في رفع الملف: ' + error.message);
+        resetUpload();
+    }
+}
+
+// بدء التحويل
+async function startConversion() {
+    if (!uploadedFileId) {
+        alert('❌ الرجاء رفع ملف أولاً!');
+        return;
+    }
+
+    if (!selectedFormat) {
+        alert('❌ الرجاء اختيار صيغة التحويل!');
+        return;
+    }
+
+    // إخفاء خيارات التحويل وإظهار التقدم
+    conversionSection.style.display = 'none';
+    progressSection.style.display = 'block';
+    progressText.textContent = 'جاري التحويل...';
+
+    // إعداد بيانات التحويل
+    const conversionData = {
+        fileId: uploadedFileId,
+        format: selectedFormat,
+        fileType: uploadedFileType
+    };
+
+    // إضافة خيارات حسب نوع الملف
+    if (uploadedFileType === 'image') {
+        conversionData.quality = imageQualitySlider.value;
+        if (resizeCheck.checked) {
+            if (widthInput.value) conversionData.width = widthInput.value;
+            if (heightInput.value) conversionData.height = heightInput.value;
+        }
+    } else if (uploadedFileType === 'video') {
+        conversionData.videoBitrate = videoBitrate.value;
+    } else if (uploadedFileType === 'audio') {
+        conversionData.audioBitrate = audioBitrate.value;
+    }
+
+    try {
+        // بدء رسم التقدم
+        animateProgress();
+
+        const response = await fetch('/api/convert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(conversionData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            downloadUrl = result.downloadUrl;
+            convertedInfo.textContent = `الملف المحول: ${result.fileName}`;
+            showDownloadSection();
+        } else {
+            throw new Error(result.error || 'فشل التحويل');
+        }
+    } catch (error) {
+        console.error('خطأ في التحويل:', error);
+        alert('❌ حدث خطأ في التحويل: ' + error.message);
+        progressSection.style.display = 'none';
+        conversionSection.style.display = 'block';
+    }
+}
+
+// تحريك شريط التقدم
+function animateProgress() {
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress >= 90) {
+            progress = 90;
+            clearInterval(interval);
+        }
+        progressFill.style.width = `${progress}%`;
+    }, 300);
+}
+
+// إظهار قسم التحميل
+function showDownloadSection() {
+    progressFill.style.width = '100%';
+    progressText.textContent = 'اكتمل التحويل! ✅';
+
+    setTimeout(() => {
+        progressSection.style.display = 'none';
+        downloadSection.style.display = 'block';
+    }, 800);
+}
+
+// تحميل الملف
+function downloadFile() {
+    if (downloadUrl) {
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.click();
+    }
+}
+
+// إعادة تعيين
+function resetUpload() {
+    selectedFile = null;
+    selectedFormat = null;
+    uploadedFileId = null;
+    uploadedFileType = null;
+    downloadUrl = null;
+    fileInput.value = '';
+
+    uploadSection.style.display = 'block';
+    fileInfoSection.style.display = 'none';
+    conversionSection.style.display = 'none';
+    progressSection.style.display = 'none';
+    downloadSection.style.display = 'none';
+
+    document.querySelectorAll('.format-btn').forEach(btn => btn.classList.remove('selected'));
+    imageQualitySlider.value = 90;
+    imageQuality.textContent = '90';
+    resizeCheck.checked = false;
+    resizeInputs.style.display = 'none';
+    widthInput.value = '';
+    heightInput.value = '';
+    progressFill.style.width = '0%';
+}
+
+// تنسيق حجم الملف
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
